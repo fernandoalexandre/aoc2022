@@ -1,4 +1,4 @@
-module github.com/fernandoalexandre/adventofcode2022
+module github.com/fernandoalexandre/aoc2022
 
 go 1.19
 
