@@ -1,11 +1,15 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"log"
+	"os"
+	"sort"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -21,8 +25,79 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("day1 called")
+		log.Println("Day 1")
+		log.Println("Part 1")
+		part_1()
+		log.Println("Part 2")
+		part_2()
 	},
+}
+
+type elf struct {
+	calories       []int
+	total_calories int
+}
+
+func readfile_p1(file_name string) []int {
+	readFile, err := os.Open(file_name)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fileScanner := bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+	var fileLines []int
+
+	for fileScanner.Scan() {
+		val, err := strconv.Atoi(fileScanner.Text())
+		if err != nil {
+			val = -1
+		}
+		fileLines = append(fileLines, int(val))
+	}
+
+	readFile.Close()
+
+	return fileLines
+}
+
+func parse_elves_inventory(inventory []int) (elves []elf) {
+	start_idx := 0
+	curr_total := 0
+	for idx, entry := range inventory {
+		if entry == -1 {
+			elves = append(elves, elf{inventory[start_idx:idx], curr_total})
+			start_idx = idx + 1
+			curr_total = 0
+		} else {
+			curr_total += entry
+		}
+	}
+	return elves
+}
+
+func part_1() {
+	inventory := readfile_p1("inputs/day1/input")
+	elves := parse_elves_inventory(inventory)
+
+	sort.Slice(elves[:], func(i, j int) bool {
+		return elves[i].total_calories > elves[j].total_calories
+	})
+
+	log.Println(fmt.Sprintf("Most calories: %d", elves[0].total_calories))
+}
+
+func part_2() {
+	inventory := readfile_p1("inputs/day1/input")
+	elves := parse_elves_inventory(inventory)
+
+	sort.Slice(elves[:], func(i, j int) bool {
+		return elves[i].total_calories > elves[j].total_calories
+	})
+
+	log.Println(fmt.Sprintf("Top 3 calories: %v", elves[0:3]))
+	log.Println(fmt.Sprintf("Sum of top 3 calories: %d", elves[0].total_calories+elves[1].total_calories+elves[2].total_calories))
 }
 
 func init() {
