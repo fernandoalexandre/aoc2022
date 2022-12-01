@@ -26,10 +26,18 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Day 1")
+		log.Println("Parsing file...")
+		inventory := readfile_p1("inputs/day1/input")
+		elves := parse_elves_inventory(inventory)
+
+		sort.Slice(elves[:], func(i, j int) bool {
+			return elves[i].total_calories > elves[j].total_calories
+		})
+
 		log.Println("Part 1")
-		part_1()
+		part_1(elves)
 		log.Println("Part 2")
-		part_2()
+		part_2(elves)
 	},
 }
 
@@ -54,7 +62,7 @@ func readfile_p1(file_name string) []int {
 		if err != nil {
 			val = -1
 		}
-		fileLines = append(fileLines, int(val))
+		fileLines = append(fileLines, val)
 	}
 
 	readFile.Close()
@@ -77,27 +85,14 @@ func parse_elves_inventory(inventory []int) (elves []elf) {
 	return elves
 }
 
-func part_1() {
-	inventory := readfile_p1("inputs/day1/input")
-	elves := parse_elves_inventory(inventory)
-
-	sort.Slice(elves[:], func(i, j int) bool {
-		return elves[i].total_calories > elves[j].total_calories
-	})
-
+func part_1(elves []elf) {
 	log.Println(fmt.Sprintf("Most calories: %d", elves[0].total_calories))
 }
 
-func part_2() {
-	inventory := readfile_p1("inputs/day1/input")
-	elves := parse_elves_inventory(inventory)
-
-	sort.Slice(elves[:], func(i, j int) bool {
-		return elves[i].total_calories > elves[j].total_calories
-	})
-
-	log.Println(fmt.Sprintf("Top 3 calories: %v", elves[0:3]))
-	log.Println(fmt.Sprintf("Sum of top 3 calories: %d", elves[0].total_calories+elves[1].total_calories+elves[2].total_calories))
+func part_2(elves []elf) {
+	total := elves[0].total_calories + elves[1].total_calories + elves[2].total_calories
+	log.Println(fmt.Sprintf("Top 3 calories elves: %v", elves[0:3]))
+	log.Println(fmt.Sprintf("Sum of top 3 calories: %d", total))
 }
 
 func init() {
