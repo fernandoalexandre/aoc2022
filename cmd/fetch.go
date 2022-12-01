@@ -55,6 +55,7 @@ This value can be obtained by inspecting the requests in adventofcode.com while 
 		url := fmt.Sprintf("https://adventofcode.com/2022/day/%d/input", day)
 		req, err := http.NewRequest("GET", url, nil)
 		req.Header.Add("Cookie", session_token)
+		req.Header.Add("User-Agent", "github.com/fernandoalexandre/aoc2022 by aoc-at-almightybuserror.com")
 		resp, err := client.Do(req)
 		if err != nil {
 			log.Fatal(err)
