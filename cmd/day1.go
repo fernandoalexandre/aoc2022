@@ -30,6 +30,7 @@ to quickly create a Cobra application.`,
 		inventory := readfile_p1("inputs/day1/input")
 		elves := parse_elves_inventory(inventory)
 
+		// Sort slice Desc
 		sort.Slice(elves[:], func(i, j int) bool {
 			return elves[i].total_calories > elves[j].total_calories
 		})
