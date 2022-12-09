@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -24,6 +26,15 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("day9 called")
+
+		test_commands := []string{}
+		commands := d9_readfile("inputs/day9/input")
+		d9p1(test_commands)
+		d9p1(commands)
+
+		d9p2(test_commands)
+		d9p2(commands)
+
 	},
 }
 
@@ -50,13 +61,52 @@ func d9_readfile(file_name string) (content []string) {
 	return content
 }
 
-func d9p1() {
+func d9p1_should_move(head, tail *Point) bool {
+	return false
+}
+
+func d9p1_move(head, tail *Point, head_positions, tail_positions *[]Point, dir string, moves int) {
+	old_head := Point{head.x, head.y}
+	head_pos := append(*head_positions, Point{head.x, head.y})
+	head_positions = &head_pos
+	switch dir {
+	case "U":
+		head = &Point{head.x, head.y + 1}
+	case "D":
+		head = &Point{head.x, head.y - 1}
+	case "L":
+		head = &Point{head.x - 1, head.y}
+	case "R":
+		head = &Point{head.x + 1, head.y}
+	}
+
+	if d9p1_should_move(head, tail) {
+		tail_pos := append(*tail_positions, Point{tail.x, tail.y})
+		tail_positions = &tail_pos
+		tail.x = old_head.x
+		tail.y = old_head.y
+	}
+}
+
+func d9p1(commands []string) {
 	fmt.Println("Part 1")
 	head := Point{0, 0}
 	tail := Point{0, 0}
+	head_positions := []Point{}
+	tail_positions := []Point{}
+
+	for _, cmd := range commands {
+		re := regexp.MustCompile(`(.*) (\d+)`)
+		p_cmd := re.FindStringSubmatch(cmd)
+
+		moves, _ := strconv.Atoi(p_cmd[2])
+		d9p1_move(&head, &tail, &head_positions, &tail_positions, p_cmd[1], moves)
+	}
+
+	log.Printf("Tail Position: %d | %v", len(tail_positions), tail_positions)
 }
 
-func d9p2() {
+func d9p2(commands []string) {
 	fmt.Println("Part 1")
 }
 
