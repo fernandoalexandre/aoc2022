@@ -36,11 +36,26 @@ to quickly create a Cobra application.`,
 			"L 5",
 			"R 2"}
 		commands := d9_readfile("inputs/day9/input")
-		d9p1(test_commands)
-		d9p1(commands)
+		rope := []Point{{0, 0}, {0, 0}}
 
-		d9p2(test_commands)
-		d9p2(commands)
+		d9(test_commands, rope)
+		rope = []Point{{0, 0}, {0, 0}}
+		d9(commands, rope)
+
+		test_commands_2 := []string{"R 5",
+			"U 8",
+			"L 8",
+			"D 3",
+			"R 17",
+			"D 10",
+			"L 25",
+			"U 20"}
+		rope = []Point{{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
+		d9(test_commands, rope)
+		rope = []Point{{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
+		d9(test_commands_2, rope)
+		rope = []Point{{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
+		d9(commands, rope)
 
 	},
 }
@@ -75,40 +90,65 @@ func Abs(x int) int {
 	return x
 }
 
-func d9p1_should_move(head, tail *Point) bool {
-	//log.Printf("Comparing %v | %v (%d, %d)", *head, *tail, head.x-tail.x, head.y-tail.y)
-	return Abs(head.x-tail.x) > 1 || Abs(head.y-tail.y) > 1
+func d9_should_move(head, tail int) bool {
+	return Abs(head-tail) > 1
 }
 
-func d9p1_move(head, tail *Point, head_positions, tail_positions []Point, dir string) ([]Point, []Point) {
-	old_head := Point{head.x, head.y}
-	head_positions = append(head_positions, Point{head.x, head.y})
+func d9_move(rope *[]Point, tail_unique_positions map[Point]int, dir string) map[Point]int {
 	switch dir {
 	case "U":
-		head.y += 1
+		(*rope)[0].y += 1
 	case "D":
-		head.y -= 1
+		(*rope)[0].y -= 1
 	case "L":
-		head.x -= 1
+		(*rope)[0].x -= 1
 	case "R":
-		head.x += 1
+		(*rope)[0].x += 1
 	}
 
-	if d9p1_should_move(head, tail) {
-		tail_positions = append(tail_positions, Point{tail.x, tail.y})
-		tail.x = old_head.x
-		tail.y = old_head.y
+	for i := 1; i < len(*rope); i++ {
+		if d9_should_move((*rope)[i-1].y, (*rope)[i].y) || d9_should_move((*rope)[i-1].x, (*rope)[i].x) {
+			if (*rope)[i-1].x > (*rope)[i].x {
+				(*rope)[i].x += 1
+			} else if (*rope)[i-1].x < (*rope)[i].x {
+				(*rope)[i].x -= 1
+			}
+			if (*rope)[i-1].y > (*rope)[i].y {
+				(*rope)[i].y += 1
+			} else if (*rope)[i-1].y < (*rope)[i].y {
+				(*rope)[i].y -= 1
+			}
+		}
 	}
+
+	tail_unique_positions[Point{(*rope)[len(*rope)-1].x, (*rope)[len(*rope)-1].y}] = 0
+
 	//log.Printf("Tail Position: %d | %v", len(tail_positions), tail_positions)
-	return head_positions, tail_positions
+	return tail_unique_positions
 }
 
-func d9p1(commands []string) {
+func d9_print_map(last_pos_map map[Point]int) {
+	for i := -15; i < 15; i++ {
+		line := ""
+		for j := -15; j < 15; j++ {
+			_, found := last_pos_map[Point{i, j}]
+			if i == 0 && j == 0 {
+				line += "s"
+			} else if !found {
+				line += "."
+			} else {
+				line += "#"
+			}
+		}
+		log.Println(line)
+	}
+}
+
+func d9(commands []string, rope []Point) {
 	fmt.Println("Part 1")
-	head := Point{0, 0}
-	tail := Point{0, 0}
-	head_positions := []Point{}
-	tail_positions := []Point{}
+
+	tail_unique_positions := make(map[Point]int)
+	tail_unique_positions[Point{0, 0}] = 0
 
 	for _, cmd := range commands {
 		re := regexp.MustCompile(`(.*) (\d+)`)
@@ -116,15 +156,22 @@ func d9p1(commands []string) {
 
 		moves, _ := strconv.Atoi(p_cmd[2])
 		for i := 0; i < moves; i++ {
-			head_positions, tail_positions = d9p1_move(&head, &tail, head_positions, tail_positions, p_cmd[1])
+			tail_unique_positions = d9_move(&rope, tail_unique_positions, p_cmd[1])
+			//log.Printf("rope = %v (%s)", rope, cmd)
+			// Debug maps
+			//point_map := make(map[Point]int)
+			//for _, point := range rope {
+			//	point_map[point] = 0
+			//}
+			//d9_print_point_map(point_map)
 		}
+
 	}
 
-	log.Printf("Tail Position: %d", len(tail_positions))
-}
-
-func d9p2(commands []string) {
-	fmt.Println("Part 1")
+	// Debug final positions
+	// log.Printf("Tail Positions: %v", tail_unique_positions)
+	log.Printf("Tail Position: %d", len(tail_unique_positions))
+	d9_print_map(tail_unique_positions)
 }
 
 func init() {
