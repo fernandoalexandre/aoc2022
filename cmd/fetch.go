@@ -36,12 +36,12 @@ This value can be obtained by inspecting the requests in adventofcode.com while 
 		}
 
 		out, err := os.Create(file_name)
-		defer out.Close()
-
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
+
+		defer out.Close()
 
 		session_token, envErr := os.LookupEnv("AOC_TOKEN")
 
@@ -53,7 +53,7 @@ This value can be obtained by inspecting the requests in adventofcode.com while 
 		client := &http.Client{}
 
 		url := fmt.Sprintf("https://adventofcode.com/2022/day/%d/input", day)
-		req, err := http.NewRequest("GET", url, nil)
+		req, _ := http.NewRequest("GET", url, nil)
 		req.Header.Add("Cookie", session_token)
 		req.Header.Add("User-Agent", "github.com/fernandoalexandre/aoc2022 by aoc-at-almightybuserror.com")
 		resp, err := client.Do(req)
@@ -63,8 +63,8 @@ This value can be obtained by inspecting the requests in adventofcode.com while 
 		}
 		defer resp.Body.Close()
 
-		n, err := io.Copy(out, resp.Body)
-		fmt.Println(fmt.Sprintf("Fetched and written %d bytes", n))
+		n, _ := io.Copy(out, resp.Body)
+		fmt.Printf("Fetched and written %d bytes", n)
 	},
 }
 

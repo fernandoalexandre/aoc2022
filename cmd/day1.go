@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -87,13 +86,13 @@ func parse_elves_inventory(inventory []int) (elves []elf) {
 }
 
 func part_1(elves []elf) {
-	log.Println(fmt.Sprintf("Most calories: %d", elves[0].total_calories))
+	log.Printf("Most calories: %d", elves[0].total_calories)
 }
 
 func part_2(elves []elf) {
 	total := elves[0].total_calories + elves[1].total_calories + elves[2].total_calories
-	log.Println(fmt.Sprintf("Top 3 calories elves: %v", elves[0:3]))
-	log.Println(fmt.Sprintf("Sum of top 3 calories: %d", total))
+	log.Printf("Top 3 calories elves: %v", elves[0:3])
+	log.Printf("Sum of top 3 calories: %d", total)
 }
 
 func init() {
