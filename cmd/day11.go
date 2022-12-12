@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"math"
 	"math/big"
 
 	"sort"
@@ -27,27 +28,26 @@ to quickly create a Cobra application.`,
 		fmt.Println("day11 called")
 
 		test_monkeys := []Monkey{}
-		test_monkeys = append(test_monkeys, Monkey{[]*big.Int{big.NewInt(79), big.NewInt(98)}, Operation{'*', 19}, 23, 2, 3, 0})
-		test_monkeys = append(test_monkeys, Monkey{[]*big.Int{big.NewInt(54), big.NewInt(65), big.NewInt(75), big.NewInt(74)}, Operation{'+', 6}, 19, 2, 0, 0})
-		test_monkeys = append(test_monkeys, Monkey{[]*big.Int{big.NewInt(79), big.NewInt(60), big.NewInt(97)}, Operation{'^', 2}, 13, 1, 3, 0})
-		test_monkeys = append(test_monkeys, Monkey{[]*big.Int{big.NewInt(74)}, Operation{'+', 3}, 17, 0, 1, 0})
+		test_monkeys = append(test_monkeys, Monkey{[]int{79, 98}, Operation{'*', 19}, 23, 2, 3, 0})
+		test_monkeys = append(test_monkeys, Monkey{[]int{54, 65, 75, 74}, Operation{'+', 6}, 19, 2, 0, 0})
+		test_monkeys = append(test_monkeys, Monkey{[]int{79, 60, 97}, Operation{'^', 2}, 13, 1, 3, 0})
+		test_monkeys = append(test_monkeys, Monkey{[]int{74}, Operation{'+', 3}, 17, 0, 1, 0})
 
 		monkeys := []Monkey{}
-		monkeys = append(monkeys, Monkey{[]*big.Int{big.NewInt(91), big.NewInt(58), big.NewInt(52), big.NewInt(69), big.NewInt(95), big.NewInt(54)}, Operation{'*', 13}, 7, 1, 5, 0})
-		monkeys = append(monkeys, Monkey{[]*big.Int{big.NewInt(80), big.NewInt(80), big.NewInt(97), big.NewInt(84)}, Operation{'^', 2}, 3, 3, 5, 0})
-		monkeys = append(monkeys, Monkey{[]*big.Int{big.NewInt(86), big.NewInt(92), big.NewInt(71)}, Operation{'+', 7}, 2, 0, 4, 0})
-		monkeys = append(monkeys, Monkey{[]*big.Int{big.NewInt(96), big.NewInt(90), big.NewInt(99), big.NewInt(76), big.NewInt(79), big.NewInt(85), big.NewInt(98), big.NewInt(61)}, Operation{'+', 4}, 11, 7, 6, 0})
-		monkeys = append(monkeys, Monkey{[]*big.Int{big.NewInt(60), big.NewInt(83), big.NewInt(68), big.NewInt(64), big.NewInt(73)}, Operation{'*', 19}, 17, 1, 0, 0})
-		monkeys = append(monkeys, Monkey{[]*big.Int{big.NewInt(96), big.NewInt(52), big.NewInt(52), big.NewInt(94), big.NewInt(76), big.NewInt(51), big.NewInt(57)}, Operation{'+', 3}, 5, 7, 3, 0})
-		monkeys = append(monkeys, Monkey{[]*big.Int{big.NewInt(75)}, Operation{'+', 5}, 13, 4, 2, 0})
-		monkeys = append(monkeys, Monkey{[]*big.Int{big.NewInt(83), big.NewInt(75)}, Operation{'+', 1}, 19, 2, 6, 0})
+		monkeys = append(monkeys, Monkey{[]int{91, 58, 52, 69, 95, 54}, Operation{'*', 13}, 7, 1, 5, 0})
+		monkeys = append(monkeys, Monkey{[]int{80, 80, 97, 84}, Operation{'^', 2}, 3, 3, 5, 0})
+		monkeys = append(monkeys, Monkey{[]int{86, 92, 71}, Operation{'+', 7}, 2, 0, 4, 0})
+		monkeys = append(monkeys, Monkey{[]int{96, 90, 99, 76, 79, 85, 98, 61}, Operation{'+', 4}, 11, 7, 6, 0})
+		monkeys = append(monkeys, Monkey{[]int{60, 83, 68, 64, 73}, Operation{'*', 19}, 17, 1, 0, 0})
+		monkeys = append(monkeys, Monkey{[]int{96, 52, 52, 94, 76, 51, 57}, Operation{'+', 3}, 5, 7, 3, 0})
+		monkeys = append(monkeys, Monkey{[]int{75}, Operation{'+', 5}, 13, 4, 2, 0})
+		monkeys = append(monkeys, Monkey{[]int{83, 75}, Operation{'+', 1}, 19, 2, 6, 0})
 
-		d11p1(test_monkeys, false)
-		d11p1(monkeys, false)
+		d11p1(test_monkeys, 96577, false)
+		d11p1(monkeys, 9699690, false)
 
-		d11p1(test_monkeys, true)
-		d11p1(monkeys, true)
-
+		d11p1(test_monkeys, 96577, true)
+		d11p1(monkeys, 9699690, true)
 	},
 }
 
@@ -56,15 +56,17 @@ type Operation struct {
 	val       int
 }
 
-func (a Operation) apply(val *big.Int) (new_val *big.Int) {
-	new_val = big.NewInt(0)
+func (a Operation) apply(val int, modulus int) (new_val int) {
+	bigval := big.NewInt(int64(val))
+	bigopval := big.NewInt(int64(a.val))
+	bigmodulus := big.NewInt(int64(modulus))
 	switch a.operation {
 	case '+':
-		new_val.Add(big.NewInt(int64(a.val)), val)
+		new_val = int(bigval.Mod(bigval.Add(bigval, bigopval), bigmodulus).Int64())
 	case '*':
-		new_val.Mul(big.NewInt(int64(a.val)), val)
+		new_val = int(bigval.Mod(bigval.Mul(bigval, bigopval), bigmodulus).Int64())
 	case '^':
-		new_val.Mul(val, val)
+		new_val = int(bigval.Mod(bigval.Exp(bigval, bigopval, nil), bigmodulus).Int64())
 	default:
 		log.Fatalf("Operation not supported: %s", string(a.operation))
 	}
@@ -72,7 +74,7 @@ func (a Operation) apply(val *big.Int) (new_val *big.Int) {
 }
 
 type Monkey struct {
-	items          []*big.Int
+	items          []int
 	operation      Operation
 	test           int
 	if_true_throw  int
@@ -80,7 +82,7 @@ type Monkey struct {
 	count_inspect  int
 }
 
-func d11p1(monkeys []Monkey, is_part2 bool) {
+func d11p1(monkeys []Monkey, modulus int, is_part2 bool) {
 	num_turn := 0
 	if is_part2 {
 		log.Println("Part 2")
@@ -97,15 +99,13 @@ func d11p1(monkeys []Monkey, is_part2 bool) {
 			curr_monkey := monkeys[monkey_idx]
 			for item_idx := 0; item_idx < len(curr_monkey.items); item_idx++ {
 				// Operation
-				new_item := curr_monkey.operation.apply(curr_monkey.items[item_idx])
+				new_item := curr_monkey.operation.apply(curr_monkey.items[item_idx], modulus)
 				// Divide by 3
 				if !is_part2 {
-					new_item.Div(new_item, big.NewInt(3))
+					new_item = int(math.Floor(float64(new_item) / 3))
 				}
 				// Test
-				mod := big.NewInt(0)
-				mod.Mod(new_item, big.NewInt(int64(curr_monkey.test)))
-				if mod.Cmp(big.NewInt(0)) == 0 {
+				if new_item%curr_monkey.test == 0 {
 					// Throw
 					monkeys[curr_monkey.if_true_throw].items = append(monkeys[curr_monkey.if_true_throw].items, new_item)
 				} else {
@@ -115,9 +115,9 @@ func d11p1(monkeys []Monkey, is_part2 bool) {
 			}
 
 			monkeys[monkey_idx].count_inspect += len(curr_monkey.items)
-			monkeys[monkey_idx].items = []*big.Int{}
+			monkeys[monkey_idx].items = []int{}
 		}
-		log.Printf("Round: %d | Monkeys = %v", turn, monkeys)
+		//log.Printf("Round: %d | Monkeys = %v", turn, monkeys)
 	}
 
 	inspects := []int{}
@@ -128,7 +128,7 @@ func d11p1(monkeys []Monkey, is_part2 bool) {
 	sort.Ints(inspects)
 
 	log.Printf("Monkeys = %v", monkeys)
-	log.Printf("Result = %d", inspects[len(inspects)-1]*inspects[len(inspects)-2])
+	log.Printf("Result = %d (%d * %d) ", inspects[len(inspects)-1]*inspects[len(inspects)-2], inspects[len(inspects)-1], inspects[len(inspects)-2])
 }
 
 func init() {
