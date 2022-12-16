@@ -51,10 +51,12 @@ func (a Sensor) intersect_area(pt Point) bool {
 }
 
 func d15_mdistance(first, second Point) int {
+	// Calculates manhattan distance
 	return Abs(first.x-second.x) + Abs(first.y-second.y)
 }
 
 func (a Sensor) get_xs_for_fixed_y(y int) (left, right int) {
+	// Calculates both X coordinates that intersect with a Y for a certain manhattan distance
 	return a.sensor_pt.x - (a.distance - Abs(y-a.sensor_pt.y)), a.sensor_pt.x + (a.distance - Abs(y-a.sensor_pt.y))
 }
 
