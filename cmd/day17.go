@@ -6,7 +6,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -25,22 +24,25 @@ to quickly create a Cobra application.`,
 		fmt.Println("day17 called")
 
 		pieces := []TetrisPiece{
-			{[][]rune{[]rune("..####.")}, 4},                                                          // -
-			{[][]rune{[]rune("...#..."), []rune("..###.."), []rune("...#...")}, 5},                    // +
-			{[][]rune{[]rune("....#.."), []rune("....#.."), []rune("..###..")}, 5},                    // inverse L
-			{[][]rune{[]rune("..#...."), []rune("..#...."), []rune("..#...."), []rune("..#....")}, 4}, // I
-			{[][]rune{[]rune("..##..."), []rune("..##...")}, 4}}                                       // square
+			{[][]rune{[]rune("..####.")}, 4, []Point{{2, 0}, {3, 0}, {4, 0}, {5, 0}}},                                                          // -
+			{[][]rune{[]rune("...#..."), []rune("..###.."), []rune("...#...")}, 5, []Point{{3, 0}, {2, 1}, {3, 1}, {4, 1}, {3, 2}}},            // +
+			{[][]rune{[]rune("....#.."), []rune("....#.."), []rune("..###..")}, 5, []Point{{4, 0}, {4, 1}, {2, 2}, {3, 2}, {4, 2}}},            // inverse L
+			{[][]rune{[]rune("..#...."), []rune("..#...."), []rune("..#...."), []rune("..#....")}, 4, []Point{{2, 0}, {2, 1}, {2, 2}, {2, 3}}}, // I
+			{[][]rune{[]rune("..##..."), []rune("..##...")}, 4, []Point{{2, 0}, {3, 0}, {2, 1}, {3, 1}}}}                                       // square
 
-		f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-		if err != nil {
-			log.Fatalf("error opening file: %v", err)
-		}
-		defer f.Close()
+		//f, err := os.OpenFile("testlogfile", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+		//if err != nil {
+		//	log.Fatalf("error opening file: %v", err)
+		//}
+		//defer f.Close()
 
-		log.SetOutput(f)
+		//log.SetOutput(f)
 
-		day17p1(example, pieces)
-		day17p1(actual, pieces)
+		day17p1(example, pieces, 2022)
+		day17p1(actual, pieces, 2022)
+
+		//day17p1(example, pieces, 1000000000000)
+		day17p1(actual, pieces, 1000000000000)
 	},
 }
 
@@ -51,102 +53,60 @@ var actual = "><<<<>><<<>><>>><<<>>>><<<<>>>><<>>><>>><>><<<>>><<<>>>><>><>>>><<
 type TetrisPiece struct {
 	format     [][]rune
 	num_blocks int
+	init_pos   []Point
 }
 
-func day17_can_move(command rune, rock TetrisPiece, tunnel *[][]rune) bool {
-	num_validated := 0
-	for i := 0; i < len(*tunnel); i++ {
-		for j := 0; j < len((*tunnel)[0]); j++ {
-			switch command {
-			case '>':
-				//log.Printf("can_move: %c | %d | %d", (*tunnel)[i][j], i, j)
-				if (*tunnel)[i][j] == '#' && j == 6 { // would overflow to the right
-					return false
-				} else if (*tunnel)[i][j] == '#' && (*tunnel)[i][j+1] == WALL { // occupied
-					return false
-				}
-			case '<':
-				if (*tunnel)[i][j] == '#' && j == 0 { // would overflow to the left
-					return false
-				} else if (*tunnel)[i][j] == '#' && (*tunnel)[i][j-1] == WALL { // occupied
-					return false
-				}
-			case 'v':
-				if (*tunnel)[i][j] == '#' && i == len(*tunnel)-1 { // would overlap floor
-					return false
-				} else if (*tunnel)[i][j] == '#' && (*tunnel)[i+1][j] == WALL { // occupied
-					return false
-				}
+func day17_can_move(command rune, rock TetrisPiece, positions *[]Point, tunnel *[][]rune) bool {
+	for _, point := range *positions {
+		switch command {
+		case '>':
+			if point.x == 6 {
+				return false
+			} else if (*tunnel)[point.y][point.x+1] == WALL {
+				return false
 			}
-
-			if (*tunnel)[i][j] == '#' {
-				num_validated++
-
-				if num_validated == rock.num_blocks {
-					return true
-				}
+		case '<':
+			if point.x == 0 {
+				return false
+			} else if (*tunnel)[point.y][point.x-1] == WALL {
+				return false
+			}
+		case 'v':
+			if point.y == len(*tunnel)-1 {
+				return false
+			} else if (*tunnel)[point.y+1][point.x] == WALL {
+				return false
 			}
 		}
 	}
 	return true
 }
 
-func day17_run_command(command rune, rock TetrisPiece, tunnel *[][]rune) bool {
-	num_moved := 0
-	if day17_can_move(command, rock, tunnel) {
-		for i := len(*tunnel) - 1; i >= 0; i-- {
+func day17_run_command(command rune, rock TetrisPiece, positions *[]Point, tunnel *[][]rune) bool {
+	if day17_can_move(command, rock, positions, tunnel) {
+		for i := 0; i < len(*positions); i++ {
 			switch command {
 			case '>':
-				for j := len((*tunnel)[0]) - 1; j >= 0; j-- {
-					if (*tunnel)[i][j] == '#' {
-						(*tunnel)[i][j+1] = '#'
-						(*tunnel)[i][j] = '.'
-						num_moved++
+				(*tunnel)[(*positions)[i].y][(*positions)[i].x+1] = '#'
+				(*tunnel)[(*positions)[i].y][(*positions)[i].x] = '.'
 
-						if num_moved == rock.num_blocks {
-							return true
-						}
-					}
-				}
+				(*positions)[i].x++
 			case '<':
-				for j := 0; j < len((*tunnel)[0]); j++ {
-					if (*tunnel)[i][j] == '#' {
-						(*tunnel)[i][j-1] = '#'
-						(*tunnel)[i][j] = '.'
-						num_moved++
+				(*tunnel)[(*positions)[i].y][(*positions)[i].x-1] = '#'
+				(*tunnel)[(*positions)[i].y][(*positions)[i].x] = '.'
 
-						if num_moved == rock.num_blocks {
-							return true
-						}
-					}
-				}
+				(*positions)[i].x--
 			case 'v':
-				for j := 0; j < len((*tunnel)[0]); j++ {
-					if (*tunnel)[i][j] == '#' {
-						(*tunnel)[i+1][j] = '#'
-						(*tunnel)[i][j] = '.'
-						num_moved++
+				(*tunnel)[(*positions)[i].y+1][(*positions)[i].x] = '#'
+				(*tunnel)[(*positions)[i].y][(*positions)[i].x] = '.'
 
-						if num_moved == rock.num_blocks {
-							return true
-						}
-					}
-				}
+				(*positions)[i].y++
 			}
 		}
 		return true
 	} else if command == 'v' { // Block it
-		for i := 0; i < len(*tunnel); i++ {
-			for j := 0; j < len((*tunnel)[0]); j++ {
-				if (*tunnel)[i][j] == '#' {
-					(*tunnel)[i][j] = WALL
-					num_moved++
-
-					if num_moved == rock.num_blocks {
-						return false
-					}
-				}
-			}
+		for _, point := range *positions {
+			(*tunnel)[point.y][point.x] = WALL
 		}
 	}
 	return false
@@ -159,6 +119,16 @@ func d17_print_tunnel(tunnel [][]rune) {
 
 	log.Println("+-------+")
 	log.Println("==============")
+}
+
+func copy_point_array(old []Point) (new []Point) {
+	new = []Point{}
+
+	for i := 0; i < len(old); i++ {
+		new = append(new, Point{old[i].x, old[i].y})
+	}
+
+	return new
 }
 
 func copy_rune_array(old [][]rune) (new [][]rune) {
@@ -175,10 +145,9 @@ func copy_rune_array(old [][]rune) (new [][]rune) {
 	return new
 }
 
-func day17p1(commands string, pieces []TetrisPiece) {
+func day17p1(commands string, pieces []TetrisPiece, target_rocks int) {
 	log.Println("Part 1")
 
-	target_rocks := 2022
 	num_rocks := 0
 
 	empty_line := "......."
@@ -187,8 +156,12 @@ func day17p1(commands string, pieces []TetrisPiece) {
 	curr_rock_idx := 0
 	curr_command_idx := 0
 
+	curr_height := 0
+
 	for num_rocks < target_rocks {
-		log.Printf("%d", num_rocks)
+		if num_rocks%1000000 == 0 {
+			log.Printf("%d/%d", num_rocks, target_rocks)
+		}
 		curr_rock := pieces[curr_rock_idx]
 		curr_rock_format := pieces[curr_rock_idx].format
 
@@ -197,6 +170,7 @@ func day17p1(commands string, pieces []TetrisPiece) {
 			tunnel = append([][]rune{[]rune(empty_line)}, tunnel...)
 		}
 		// Add the piece
+		rock_positions := copy_point_array(curr_rock.init_pos)
 		tunnel = append(copy_rune_array(curr_rock_format), tunnel...)
 
 		//d17_print_tunnel(tunnel)
@@ -206,11 +180,11 @@ func day17p1(commands string, pieces []TetrisPiece) {
 			//log.Printf("Command %c", curr_command)
 
 			// Run command
-			day17_run_command(curr_command, curr_rock, &tunnel)
+			day17_run_command(curr_command, curr_rock, &rock_positions, &tunnel)
 			//d17_print_tunnel(tunnel)
 			// move below
 
-			if !day17_run_command('v', curr_rock, &tunnel) { // if didn't move below
+			if !day17_run_command('v', curr_rock, &rock_positions, &tunnel) { // if didn't move below
 				num_rocks++
 
 				break
@@ -221,10 +195,26 @@ func day17p1(commands string, pieces []TetrisPiece) {
 			//d17_print_tunnel(tunnel)
 		}
 
-		for i := len(tunnel) - 1; i >= 0; i-- {
-			if string(tunnel[i]) == empty_line {
-				tunnel = tunnel[i+1:]
+		for i := 0; i < len(tunnel); i++ {
+			if string(tunnel[i]) != empty_line {
+				tunnel = tunnel[i:]
 				break
+			}
+		}
+
+		mask := []rune{'.', '.', '.', '.', '.', '.', '.'}
+		// optimize the tunnel size to avoid become yuge
+		for i := 0; i < len(tunnel); i++ {
+			for j := 0; j < len(tunnel[0]); j++ {
+				if tunnel[i][j] != '.' {
+					mask[j] = '#'
+
+					if string(mask) == "#######" {
+						//log.Printf("Trimming %d", len(tunnel)-(i+1))
+						curr_height += len(tunnel) - (i + 1)
+						tunnel = tunnel[:i+1]
+					}
+				}
 			}
 		}
 
@@ -234,8 +224,8 @@ func day17p1(commands string, pieces []TetrisPiece) {
 		curr_command_idx = (curr_command_idx + 1) % len(commands)
 	}
 
-	d17_print_tunnel(tunnel)
-	log.Printf("%d", len(tunnel))
+	//d17_print_tunnel(tunnel)
+	log.Printf("%d", len(tunnel)+curr_height)
 }
 
 func init() {
