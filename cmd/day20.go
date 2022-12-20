@@ -112,10 +112,16 @@ func day20p1(commands []int) {
 			//d20_print_state(state)
 
 			target_position := (Abs(to_process[i].curr_pos) + Abs(to_process[i].val)) % len(to_process)
-			if target_position == 0 {
+			if target_position < 0 {
+				for target_position < 0 {
+					target_position = len(to_process) + target_position - 1
+				}
+			} else if target_position == 0 && to_process[i].val < 0 {
+				target_position = len(to_process) - 1
+			} else if target_position > len(to_process) {
+				target_position = (target_position + 1) % len(to_process)
+			} else if target_position == len(to_process) {
 				target_position = 1
-			} else if target_position == len(to_process)-1 {
-				target_position = 0
 			}
 
 			to_process[i].curr_pos = target_position
