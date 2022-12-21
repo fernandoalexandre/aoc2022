@@ -32,7 +32,7 @@ to quickly create a Cobra application.`,
 		day20p1(test_content)
 		day20p1(content)
 
-		day20p2(test_content)
+		day20p2(content)
 
 	},
 }
@@ -103,7 +103,8 @@ func day20p1(commands []int) {
 
 	//d20_print_state(state)
 
-	for i := 0; i < len(to_process); i++ {
+	length := len(to_process)
+	for i := 0; i < length; i++ {
 		// Remove entry
 		//log.Println("new")
 		if to_process[i].val != 0 {
@@ -111,16 +112,19 @@ func day20p1(commands []int) {
 			state = append(state[:to_process[i].curr_pos], state[to_process[i].curr_pos+1:]...)
 			//d20_print_state(state)
 
-			target_position := (Abs(to_process[i].curr_pos) + Abs(to_process[i].val)) % len(to_process)
+			target_position := (to_process[i].curr_pos + to_process[i].val)
 			if target_position < 0 {
 				for target_position < 0 {
-					target_position = len(to_process) + target_position - 1
+					target_position = length + target_position - 1
 				}
 			} else if target_position == 0 && to_process[i].val < 0 {
-				target_position = len(to_process) - 1
-			} else if target_position > len(to_process) {
-				target_position = (target_position + 1) % len(to_process)
-			} else if target_position == len(to_process) {
+				target_position = length - 1
+			} else if target_position > length {
+				for target_position > length {
+					target_position -= length
+				}
+				target_position = (target_position + 1) % length
+			} else if target_position == length {
 				target_position = 1
 			}
 
@@ -161,13 +165,14 @@ func day20p2(commands []int) {
 
 	to_process := []*CipherEntry{}
 	state := []*CipherEntry{}
+	factor := 811589153 % (len(commands) - 1)
 	for idx, cmd := range commands {
-		entry := CipherEntry{idx, idx, cmd, int64(cmd * 811589153)}
+		entry := CipherEntry{idx, idx, cmd, int64(cmd * factor)}
 		to_process = append(to_process, &entry)
 		state = append(state, &entry)
 	}
 
-	d20_print_state(state)
+	//d20_print_state(state)
 
 	for k := 0; k < 10; k++ {
 		for i := 0; i < len(to_process); i++ {
@@ -181,16 +186,21 @@ func day20p2(commands []int) {
 				state = append(state[:to_process[i].curr_pos], state[to_process[i].curr_pos+1:]...)
 				//d20_print_state(state)
 
+				length := int64(len(to_process))
 				target_position := (int64(to_process[i].curr_pos) + to_process[i].alt_val)
 				if target_position < 0 {
 					for target_position < 0 {
-						target_position = int64(len(to_process)) + target_position - 1
+						target_position = length + target_position - 1
 					}
-				} else if target_position == 0 && to_process[i].alt_val < 0 {
-					target_position = int64(len(to_process)) - 1
-				} else if target_position > int64(len(to_process)) {
-					target_position = (target_position + 1) % int64(len(to_process))
-				} else if target_position == int64(len(to_process)) {
+				} else if target_position > length {
+					for target_position > length {
+						target_position -= length - 1
+					}
+				}
+
+				if target_position == 0 && to_process[i].alt_val < 0 {
+					target_position = length - 1
+				} else if target_position == length {
 					target_position = 1
 				}
 
@@ -205,7 +215,7 @@ func day20p2(commands []int) {
 				//d20_print_state(state)
 			}
 		}
-		d20_print_state(state)
+		//d20_print_state(state)
 	}
 
 	final_idx := -1
@@ -220,12 +230,12 @@ func day20p2(commands []int) {
 	//d20_print_state(state)
 	i := []int{1000, 2000, 3000}
 	for _, idx := range i {
-		var curr_val int64 = state[(final_idx+idx)%len(state)].alt_val
+		var curr_val int64 = int64(state[(final_idx+idx)%len(state)].val) * 811589153
 		log.Printf("Sum: %d | %d", curr_val, (final_idx+idx)%len(state))
 		result += curr_val
 	}
 
-	d20_print_state(state)
+	//d20_print_state(state)
 
 	log.Printf("Result: %d", result)
 }
