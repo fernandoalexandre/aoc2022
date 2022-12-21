@@ -32,6 +32,7 @@ to quickly create a Cobra application.`,
 		day20p1(test_content)
 		day20p1(content)
 
+		day20p2(test_content)
 		day20p2(content)
 
 	},
